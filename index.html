@@ -3,91 +3,958 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Picks - Curated Product Recommendations</title>
+    <title>Smart Picks — Curated Product Cartography</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Instrument+Sans:wght@400;600;700&family=Italiana&family=Jura:wght@300;400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0B0D10;
+            --primary: #E8E4DD;
+            --accent: #C94A42;
+            --secondary: #3E6070;
+            --faint: #141820;
+            --dim: #222830;
+            --whisper: #485060;
+            --muted: #303840;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #fafafa;
-            color: #333;
+            background: var(--bg);
+            color: var(--primary);
+            font-family: 'Instrument Sans', sans-serif;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
         }
-        .logo { font-size: 48px; margin-bottom: 10px; }
-        h1 { font-size: 32px; color: #111; margin-bottom: 8px; }
-        .tagline { font-size: 18px; color: #666; margin-bottom: 40px; }
-        .features {
+
+        /* ============================================
+           CARTOGRAPHIC GRID BACKGROUND
+           ============================================ */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--faint) 1px, transparent 1px),
+                linear-gradient(90deg, var(--faint) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--dim) 1px, transparent 1px),
+                linear-gradient(90deg, var(--dim) 1px, transparent 1px);
+            background-size: 200px 200px;
+        }
+
+        /* ============================================
+           CONSTELLATION PARTICLES
+           ============================================ */
+        #constellation {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ============================================
+           MAIN LAYOUT
+           ============================================ */
+        .page {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 60px;
+        }
+
+        @media (max-width: 768px) {
+            .page { padding: 0 24px; }
+        }
+
+        /* ============================================
+           EDGE COORDINATES
+           ============================================ */
+        .edge-coords {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .coord {
+            position: absolute;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+
+        .coord-left { left: 16px; }
+        .coord-right { right: 16px; }
+
+        /* ============================================
+           HEADER / HERO
+           ============================================ */
+        .hero {
+            padding-top: 120px;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: 'Italiana', serif;
+            font-size: clamp(48px, 8vw, 92px);
+            font-weight: 400;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            color: var(--primary);
+        }
+
+        .hero-rule {
+            width: min(500px, 60%);
+            height: 1px;
+            background: var(--secondary);
+            margin: 16px 0;
+            position: relative;
+        }
+
+        .hero-rule::before, .hero-rule::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            width: 1px;
+            height: 7px;
+            background: var(--secondary);
+        }
+
+        .hero-rule::before { left: 0; }
+        .hero-rule::after { right: 0; }
+
+        .hero-sub {
+            font-family: 'Jura', sans-serif;
+            font-weight: 300;
+            font-size: clamp(14px, 2vw, 22px);
+            color: var(--whisper);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .hero-est {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ============================================
+           ORIGIN WAYPOINT
+           ============================================ */
+        .origin-section {
+            padding: 40px 0 60px;
             display: flex;
-            gap: 30px;
+            align-items: flex-start;
+            gap: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .origin-section { flex-direction: column; gap: 30px; }
+        }
+
+        .waypoint-visual {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            flex-shrink: 0;
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid var(--dim);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ring-1 { width: 220px; height: 220px; border-color: var(--secondary); }
+        .ring-2 { width: 176px; height: 176px; }
+        .ring-3 { width: 132px; height: 132px; }
+        .ring-4 { width: 88px; height: 88px; }
+        .ring-5 { width: 44px; height: 44px; }
+
+        .beacon {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(201, 74, 66, 0.4);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(201, 74, 66, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(201, 74, 66, 0.6); }
+        }
+
+        .tick-marks {
+            position: absolute;
+            inset: 0;
+        }
+
+        .tick {
+            position: absolute;
+            width: 1px;
+            height: 8px;
+            background: var(--dim);
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 0;
+        }
+
+        .tick.cardinal { background: var(--primary); height: 10px; }
+
+        .origin-label {
+            padding-top: 40px;
+        }
+
+        .origin-label h3 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--whisper);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .origin-label p {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .origin-desc {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        /* ============================================
+           THREE TERRITORIES
+           ============================================ */
+        .territories {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            padding: 60px 0;
+        }
+
+        @media (max-width: 768px) {
+            .territories { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        .territory {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .territory-num {
+            font-family: 'Jura', sans-serif;
+            font-weight: 300;
+            font-size: 42px;
+            color: var(--dim);
+            line-height: 1;
+        }
+
+        .territory-divider {
+            width: 1px;
+            height: 48px;
+            background: var(--secondary);
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .territory-info h3 {
+            font-family: 'Jura', sans-serif;
+            font-weight: 500;
+            font-size: 17px;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .territory-info .sub {
+            font-size: 11px;
+            color: var(--whisper);
+            margin-top: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .territory-info .note {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .micro-dots {
+            display: flex;
             flex-wrap: wrap;
-            justify-content: center;
-            max-width: 800px;
-            margin-bottom: 40px;
+            gap: 3px;
+            margin-top: 10px;
+            max-width: 200px;
         }
-        .feature {
-            background: #fff;
-            border-radius: 12px;
-            padding: 24px;
-            width: 220px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+        .micro-dot {
+            width: 2px;
+            height: 2px;
+            background: var(--dim);
+            border-radius: 0;
         }
-        .feature-icon { font-size: 28px; margin-bottom: 10px; }
-        .feature h3 { font-size: 16px; margin-bottom: 6px; }
-        .feature p { font-size: 13px; color: #888; }
-        .cta {
-            display: inline-block;
-            background: #e01e5a;
-            color: #fff;
-            padding: 14px 36px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: background 0.2s;
+
+        .micro-dot.highlight { background: var(--secondary); }
+
+        /* ============================================
+           THRESHOLD LINE
+           ============================================ */
+        .threshold {
+            position: relative;
+            padding: 0;
+            margin: 20px 0;
         }
-        .cta:hover { background: #c4174e; }
-        .footer {
-            margin-top: 60px;
+
+        .threshold-line {
+            width: 100%;
+            height: 2px;
+            background: var(--secondary);
+            position: relative;
+        }
+
+        .threshold-ticks {
+            position: absolute;
+            top: -6px;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            display: flex;
+        }
+
+        .threshold-glow {
+            position: absolute;
+            top: 2px;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(to bottom, rgba(62, 96, 112, 0.15), transparent);
+        }
+
+        .threshold-coord {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        /* ============================================
+           ARRIVE — MONUMENTAL WORD
+           ============================================ */
+        .arrive-section {
+            padding: 60px 0 20px;
+        }
+
+        .arrive-word {
+            font-family: 'Italiana', serif;
+            font-size: clamp(80px, 14vw, 150px);
+            font-weight: 400;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .arrive-caption {
+            font-family: 'Lora', serif;
+            font-style: italic;
             font-size: 13px;
-            color: #aaa;
+            color: var(--muted);
+            margin-top: 16px;
         }
-        .footer a { color: #888; text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
+
+        /* ============================================
+           PRODUCT TERRAIN GRID
+           ============================================ */
+        .terrain {
+            padding: 40px 0 20px;
+        }
+
+        .terrain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .terrain-grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 4px; }
+        }
+
+        .terrain-cell {
+            aspect-ratio: 1;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .terrain-cell:hover {
+            transform: scale(1.08);
+            z-index: 3;
+            box-shadow: 0 0 16px rgba(201, 74, 66, 0.2);
+        }
+
+        .terrain-cell .cell-num {
+            position: absolute;
+            top: 3px;
+            left: 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 8px;
+            color: var(--whisper);
+            opacity: 0.6;
+        }
+
+        .cell-bg { background: var(--bg); }
+        .cell-faint { background: var(--faint); }
+        .cell-dim { background: var(--dim); }
+        .cell-muted { background: var(--muted); }
+        .cell-secondary { background: var(--secondary); }
+        .cell-dark1 { background: #1A2830; }
+        .cell-dark2 { background: #151E24; }
+        .cell-dark3 { background: #1E2A34; }
+        .cell-accent { background: var(--accent); }
+
+        .terrain-caption {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* ============================================
+           NAVIGATION STRIP
+           ============================================ */
+        .nav-strip {
+            border-top: 1px solid var(--dim);
+            padding: 16px 0;
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .nav-item {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--whisper);
+            letter-spacing: 2px;
+            text-decoration: none;
+            padding-bottom: 6px;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav-item:hover { color: var(--primary); }
+        .nav-item.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            padding: 40px 0 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-left .pinterest-url {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--whisper);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-left .pinterest-url:hover { color: var(--primary); }
+
+        .footer-left .footer-brand {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        .footer-left .footer-links {
+            margin-top: 8px;
+        }
+
+        .footer-left .footer-links a {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-left .footer-links a:hover { color: var(--whisper); }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .cta-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .cta-arrow {
+            display: inline-block;
+            width: 16px;
+            height: 2px;
+            background: currentColor;
+            position: relative;
+        }
+
+        .cta-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid currentColor;
+            border-top: 2px solid currentColor;
+            transform: rotate(45deg);
+        }
+
+        /* ============================================
+           COMPASS (bottom-right)
+           ============================================ */
+        .compass {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 52px;
+            height: 52px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .compass-ring {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid var(--dim);
+            position: relative;
+        }
+
+        .compass-n {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'DM Mono', monospace;
+            font-size: 8px;
+            color: var(--whisper);
+        }
+
+        .compass-tick-n {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            width: 1px;
+            height: 8px;
+            background: var(--primary);
+            transform: translateX(-50%);
+        }
+
+        .compass-center {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ============================================
+           DASHED PATH SVG
+           ============================================ */
+        .dashed-paths {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================
+           SCROLLBAR
+           ============================================ */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--dim); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--whisper); }
     </style>
 </head>
 <body>
-    <div class="logo">&#10024;</div>
-    <h1>Smart Picks</h1>
-    <p class="tagline">Curated product recommendations you'll actually love</p>
 
-    <div class="features">
-        <div class="feature">
-            <div class="feature-icon">&#127968;</div>
-            <h3>Home & Decor</h3>
-            <p>Transform your space with handpicked home essentials</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">&#127860;</div>
-            <h3>Kitchen Must-Haves</h3>
-            <p>Trending gadgets that make cooking effortless</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">&#128171;</div>
-            <h3>Tech & Desk Setup</h3>
-            <p>Level up your workspace with smart accessories</p>
+    <!-- Cartographic grid -->
+    <div class="grid-bg"></div>
+
+    <!-- Constellation particles -->
+    <canvas id="constellation"></canvas>
+
+    <!-- Edge coordinates -->
+    <div class="edge-coords" id="edgeCoords"></div>
+
+    <!-- Compass -->
+    <div class="compass">
+        <div class="compass-ring">
+            <span class="compass-n">N</span>
+            <div class="compass-tick-n"></div>
+            <div class="compass-center"></div>
         </div>
     </div>
 
-    <a class="cta" href="https://in.pinterest.com/cinematicvision1403/">Follow us on Pinterest</a>
+    <!-- Main content -->
+    <div class="page">
 
-    <div class="footer">
-        <p>&copy; 2026 Smart Picks. All rights reserved.</p>
-        <p><a href="privacy-policy.html">Privacy Policy</a></p>
+        <!-- HERO -->
+        <section class="hero">
+            <h1 class="hero-title">Smart Picks</h1>
+            <div class="hero-rule"></div>
+            <p class="hero-sub">Curated Product Cartography</p>
+            <p class="hero-est">EST. 2026</p>
+        </section>
+
+        <!-- ORIGIN WAYPOINT -->
+        <section class="origin-section">
+            <div class="waypoint-visual">
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+                <div class="ring ring-4"></div>
+                <div class="ring ring-5"></div>
+                <div class="tick-marks" id="tickMarks"></div>
+                <div class="beacon"></div>
+            </div>
+            <div class="origin-label">
+                <h3>Origin</h3>
+                <p>Point of first contact</p>
+                <p class="origin-desc">
+                    Every curated collection begins at a single point of arrival.
+                    You stand at the threshold between browsing and discovering —
+                    where intention meets the objects that define your spaces.
+                </p>
+            </div>
+        </section>
+
+        <!-- THREE TERRITORIES -->
+        <section class="territories">
+            <div class="territory">
+                <span class="territory-num">01</span>
+                <div class="territory-divider"></div>
+                <div class="territory-info">
+                    <h3>HOME</h3>
+                    <p class="sub">Decor & Organization</p>
+                    <p class="note">Threshold objects for dwelling spaces</p>
+                    <div class="micro-dots" id="dots1"></div>
+                </div>
+            </div>
+            <div class="territory">
+                <span class="territory-num">02</span>
+                <div class="territory-divider"></div>
+                <div class="territory-info">
+                    <h3>CRAFT</h3>
+                    <p class="sub">Kitchen & Tools</p>
+                    <p class="note">Essential instruments of daily ritual</p>
+                    <div class="micro-dots" id="dots2"></div>
+                </div>
+            </div>
+            <div class="territory">
+                <span class="territory-num">03</span>
+                <div class="territory-divider"></div>
+                <div class="territory-info">
+                    <h3>FORM</h3>
+                    <p class="sub">Tech & Aesthetic</p>
+                    <p class="note">Where function meets visual order</p>
+                    <div class="micro-dots" id="dots3"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- THRESHOLD -->
+        <section class="threshold">
+            <div class="threshold-line">
+                <div class="threshold-glow"></div>
+            </div>
+            <p class="threshold-coord">THRESHOLD  37.7749N</p>
+        </section>
+
+        <!-- ARRIVE -->
+        <section class="arrive-section">
+            <h2 class="arrive-word">arrive.</h2>
+            <p class="arrive-caption">The moment before discovery becomes possession.</p>
+        </section>
+
+        <!-- PRODUCT TERRAIN GRID -->
+        <section class="terrain">
+            <div class="terrain-grid" id="terrainGrid"></div>
+            <p class="terrain-caption">FIG. 01  /  PRODUCT TERRAIN MAP  /  CURATED OBJECTS</p>
+        </section>
+
+        <!-- NAV STRIP -->
+        <nav class="nav-strip">
+            <a href="#" class="nav-item">ORIGIN</a>
+            <a href="#" class="nav-item">DISCOVER</a>
+            <a href="#" class="nav-item">CURATE</a>
+            <a href="#" class="nav-item">COLLECT</a>
+            <a href="https://in.pinterest.com/cinematicvision1403/" class="nav-item active">ARRIVE</a>
+        </nav>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-left">
+                <a href="https://in.pinterest.com/cinematicvision1403/" class="pinterest-url">in.pinterest.com / cinematicvision1403</a>
+                <p class="footer-brand">SMART PICKS  /  THRESHOLD CARTOGRAPHY  /  EST. 2026</p>
+                <div class="footer-links">
+                    <a href="privacy-policy.html">Privacy Policy</a>
+                </div>
+            </div>
+            <a href="https://in.pinterest.com/cinematicvision1403/" class="cta-btn">
+                BEGIN DISCOVERY
+                <span class="cta-arrow"></span>
+            </a>
+        </footer>
+
     </div>
+
+    <script>
+        // ============================================
+        // CONSTELLATION PARTICLES
+        // ============================================
+        (function() {
+            const canvas = document.getElementById('constellation');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const COLORS = {
+                dim: '#222830',
+                secondary: '#3E6070',
+                primary: '#E8E4DD'
+            };
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function seedRandom(seed) {
+                let s = seed;
+                return function() {
+                    s = (s * 16807) % 2147483647;
+                    return (s - 1) / 2147483646;
+                };
+            }
+
+            function init() {
+                resize();
+                particles = [];
+                const rng = seedRandom(42);
+                const w = canvas.width;
+                const h = canvas.height;
+
+                // Dense cluster upper-right
+                for (let i = 0; i < 200; i++) {
+                    const x = w * 0.6 + (rng() - 0.5) * w * 0.5;
+                    const y = h * 0.12 + (rng() - 0.5) * h * 0.3;
+                    const b = rng();
+                    let color, r;
+                    if (b > 0.94) { color = COLORS.primary; r = 2; }
+                    else if (b > 0.8) { color = COLORS.secondary; r = 1.5; }
+                    else { color = COLORS.dim; r = 1; }
+                    particles.push({ x, y, r, color, vy: (rng() - 0.5) * 0.08 });
+                }
+
+                // Sparse mid particles
+                for (let i = 0; i < 60; i++) {
+                    particles.push({
+                        x: rng() * w,
+                        y: h * 0.3 + rng() * h * 0.4,
+                        r: 0.8,
+                        color: COLORS.dim,
+                        vy: (rng() - 0.5) * 0.04
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (const p of particles) {
+                    p.y += p.vy;
+                    if (p.y < -10) p.y = canvas.height + 10;
+                    if (p.y > canvas.height + 10) p.y = -10;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', () => { resize(); init(); });
+            init();
+            draw();
+        })();
+
+        // ============================================
+        // TICK MARKS ON WAYPOINT
+        // ============================================
+        (function() {
+            const container = document.getElementById('tickMarks');
+            for (let angle = 0; angle < 360; angle += 15) {
+                const tick = document.createElement('div');
+                tick.className = 'tick' + (angle % 90 === 0 ? ' cardinal' : '');
+                const rad = angle * Math.PI / 180;
+                const dist = 110;
+                const x = Math.cos(rad) * dist;
+                const y = Math.sin(rad) * dist;
+                tick.style.cssText = `transform: translate(${x}px, ${y}px) rotate(${angle + 90}deg);`;
+                container.appendChild(tick);
+            }
+        })();
+
+        // ============================================
+        // MICRO DOT TEXTURES
+        // ============================================
+        (function() {
+            function seedRandom(s) {
+                return function() {
+                    s = (s * 16807) % 2147483647;
+                    return (s - 1) / 2147483646;
+                };
+            }
+            ['dots1', 'dots2', 'dots3'].forEach((id, idx) => {
+                const el = document.getElementById(id);
+                const rng = seedRandom(42 + idx * 100);
+                for (let i = 0; i < 80; i++) {
+                    if (rng() > 0.35) {
+                        const dot = document.createElement('div');
+                        dot.className = 'micro-dot' + (rng() > 0.93 ? ' highlight' : '');
+                        el.appendChild(dot);
+                    }
+                }
+            });
+        })();
+
+        // ============================================
+        // PRODUCT TERRAIN GRID
+        // ============================================
+        (function() {
+            const grid = document.getElementById('terrainGrid');
+            const classes = ['cell-bg', 'cell-faint', 'cell-dim', 'cell-muted',
+                             'cell-secondary', 'cell-dark1', 'cell-dark2', 'cell-dark3'];
+            const accents = new Set([3, 10, 18, 31, 39, 46, 55, 63, 72, 81, 89, 97, 104, 113, 121, 129, 136, 145]);
+            const seconds = new Set([7, 15, 26, 43, 54, 63, 70, 82, 90, 100, 110, 118, 125, 133, 141]);
+            const total = 150;
+
+            for (let i = 0; i < total; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'terrain-cell ';
+
+                if (accents.has(i)) {
+                    cell.className += 'cell-accent';
+                } else if (seconds.has(i)) {
+                    cell.className += 'cell-secondary';
+                } else {
+                    cell.className += classes[(i * 7 + Math.floor(i / 10) * 3) % classes.length];
+                }
+
+                cell.innerHTML = `<span class="cell-num">${String(i + 1).padStart(2, '0')}</span>`;
+                grid.appendChild(cell);
+            }
+        })();
+
+        // ============================================
+        // EDGE COORDINATES
+        // ============================================
+        (function() {
+            const container = document.getElementById('edgeCoords');
+            const vh = window.innerHeight;
+            for (let i = 0; i < 14; i++) {
+                const y = 100 + i * (vh / 14);
+                const ref = String.fromCharCode(65 + i) + String(i).padStart(2, '0');
+
+                const left = document.createElement('span');
+                left.className = 'coord coord-left';
+                left.style.top = y + 'px';
+                left.textContent = ref;
+                container.appendChild(left);
+
+                const right = document.createElement('span');
+                right.className = 'coord coord-right';
+                right.style.top = y + 'px';
+                right.textContent = ref;
+                container.appendChild(right);
+            }
+        })();
+    </script>
+
 </body>
 </html>
